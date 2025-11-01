@@ -1,0 +1,17 @@
+{
+  "specId": "SPEC-MAX-HEIGHT-01",
+  "description": "Defines the maximum vertical build limit for all generated structures.",
+  "rules": [
+    {
+      "name": "GlobalHeightCeiling",
+      "constraint": "for each shape in model.shapes, shape.position.y must be <= 50",
+      "action": "clamp",
+      "value": 50
+    },
+    {
+      "name": "AtmosphericPressureIntegrity",
+      "constraint": "if shape.material is 'glass' and shape.position.y > 40, require reinforced variant",
+      "notes": "Standard glass is not suitable for high-altitude pressures in this simulation."
+    }
+  ]
+}

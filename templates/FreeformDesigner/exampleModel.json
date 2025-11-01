@@ -1,0 +1,25 @@
+{
+  "shapes": [
+    {
+      "type": "box",
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "rotation": { "x": 0, "y": 0.5, "z": 0 },
+      "dimensions": { "width": 10, "height": 1, "depth": 10 },
+      "material": "purple"
+    },
+    {
+      "type": "sphere",
+      "position": { "x": 0, "y": 8, "z": 0 },
+      "rotation": { "x": 0, "y": 0, "z": 0 },
+      "dimensions": { "width": 4, "height": 4, "depth": 4, "diameter": 4 },
+      "material": "glass"
+    },
+    {
+      "type": "cylinder",
+      "position": { "x": 8, "y": 5, "z": -8 },
+      "rotation": { "x": 1.57, "y": 0, "z": 0 },
+      "dimensions": { "width": 2, "height": 6, "depth": 2, "diameter": 2 },
+      "material": "teal"
+    }
+  ]
+}
