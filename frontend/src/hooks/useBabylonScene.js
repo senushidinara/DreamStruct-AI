@@ -86,10 +86,9 @@ const createModelScene = (scene, modelData, materialMap) => {
         generatedMeshes.forEach(({ mesh, originalY, shapeType }, index) => {
             if (mesh.material === materialMap.glass) {
                 // Pulsating glow effect
-                // Get the base color from the material definition, in this case (0.4, 0.6, 1)
                 const baseColor = materialMap.glass.emissiveColor;
-                // Create a smooth oscillation between a dim (e.g., 0.6) and bright (e.g., 1.0) state.
-                const glow = (Math.sin(time * 1.5 + index * 0.5) + 1) / 2 * 0.4 + 0.6; // Oscillates between 0.6 and 1.0
+                // **UPDATED:** More pronounced pulsation. Oscillates between 0.5 and 1.2 for a stronger effect.
+                const glow = (Math.sin(time * 0.8 + index * 0.5) + 1) / 2 * 0.7 + 0.5; 
                 mesh.material.emissiveColor = new BABYLON.Color3(baseColor.r * glow, baseColor.g * glow, baseColor.b * glow);
             }
 
@@ -146,7 +145,9 @@ export const useBabylonScene = (canvasRef, modelData) => {
       glassMaterial.specularPower = 128;
       glassMaterial.emissiveColor = new BABYLON.Color3(0.4, 0.6, 1);
       glassMaterial.reflectionFresnelParameters = new BABYLON.FresnelParameters();
-      glassMaterial.reflectionFresnelParameters.power = 2;
+      // **UPDATED:** Increased Fresnel power for a stronger, more visible shimmer effect on edges.
+      glassMaterial.reflectionFresnelParameters.power = 4;
+      glassMaterial.reflectionFresnelParameters.bias = 0.1;
       
       const materialMap = { purple: purpleMaterial, teal: tealMaterial, glass: glassMaterial };
 

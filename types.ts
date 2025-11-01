@@ -1,3 +1,4 @@
+
 export interface Project {
   title: string;
   description: string;
@@ -8,7 +9,7 @@ export interface Project {
 
 // Types for AI-generated 3D models
 export type ShapeType = 'box' | 'sphere' | 'cylinder';
-export type MaterialType = 'purple' | 'teal' | 'glass';
+export type MaterialType = 'purple' | 'teal' | 'glass' | 'gold' | 'emissive_blue' | 'wood' | 'metallic';
 
 export interface Position {
   x: number;

@@ -1,15 +1,15 @@
 
 import { useEffect } from 'react';
 import type React from 'react';
-import { ModelData, Shape } from '../types';
+import { ModelData, Shape, MaterialType } from '../types';
 
 // Make Babylon.js available from the window object (from CDN)
 declare const BABYLON: any;
 
-const createDefaultScene = (scene: any, materialMap: {[key: string]: any}) => {
+const createDefaultScene = (scene: any, materialMap: {[key in MaterialType]: any}) => {
     // Magical Floating Treehouse Hotel
     const trunk = BABYLON.MeshBuilder.CreateCylinder("trunk", {height: 20, diameter: 2, tessellation: 24}, scene);
-    trunk.material = materialMap.purple;
+    trunk.material = materialMap.wood;
     trunk.position.y = 0;
 
     const platforms: any[] = [];
@@ -26,9 +26,7 @@ const createDefaultScene = (scene: any, materialMap: {[key: string]: any}) => {
     const numLanterns = 6;
     for (let i = 0; i < numLanterns; i++) {
         const lantern = BABYLON.MeshBuilder.CreateSphere(`lantern${i}`, {diameter: 0.8}, scene);
-        const lanternMat = new BABYLON.StandardMaterial(`lanternMat${i}`, scene);
-        lanternMat.emissiveColor = new BABYLON.Color3(0.8, 0.5, 1); // Glowing purple
-        lantern.material = lanternMat;
+        lantern.material = materialMap.emissive_blue;
         lantern.position = new BABYLON.Vector3(
             (Math.random() - 0.5) * 12,
             Math.random() * 15 + 2,
@@ -48,13 +46,14 @@ const createDefaultScene = (scene: any, materialMap: {[key: string]: any}) => {
         lanterns.forEach((lantern, i) => {
             lantern.position.y += Math.sin(time * 2 + i) * 0.01;
             // Pulsating glow
-            const glow = (Math.sin(time * 1.5 + i * 0.5) + 1) / 2 * 0.7 + 0.3; // Varies between 0.3 and 1.0
-            lantern.material.emissiveColor = new BABYLON.Color3(0.8 * glow, 0.5 * glow, 1 * glow);
+            const glow = (Math.sin(time * 2.5 + i) + 1) / 2 * 0.5 + 0.5;
+            const baseColor = materialMap.emissive_blue.emissiveColor;
+            lantern.material.emissiveColor = new BABYLON.Color3(baseColor.r * glow, baseColor.g * glow, baseColor.b * glow);
         });
     });
 };
 
-const createModelScene = (scene: any, modelData: ModelData, materialMap: {[key: string]: any}) => {
+const createModelScene = (scene: any, modelData: ModelData, materialMap: {[key in MaterialType]: any}) => {
     const generatedMeshes: {mesh: any, originalY: number, shapeType: Shape['type']}[] = [];
 
     modelData.shapes.forEach((shape: Shape, index: number) => {
@@ -94,8 +93,14 @@ const createModelScene = (scene: any, modelData: ModelData, materialMap: {[key: 
         time += 0.01;
         generatedMeshes.forEach(({ mesh, originalY, shapeType }, index) => {
             if (mesh.material.name === "glassMat") {
-                // Create a shimmering, refractive effect
-                mesh.material.reflectionFresnelParameters.power = 2.5 + Math.cos(time * 0.5 + index) * 1.5;
+                // Slower, gentler pulsation for a mesmerizing effect. Oscillates between 0.6 and 1.0
+                const glow = (Math.sin(time * 0.8 + index * 0.5) + 1) / 2 * 0.4 + 0.6;
+                const baseColor = materialMap.glass.emissiveColor;
+                mesh.material.emissiveColor = new BABYLON.Color3(baseColor.r * glow, baseColor.g * glow, baseColor.b * glow);
+            } else if (mesh.material.name === "emissiveBlueMat") {
+                 const glow = (Math.sin(time * 2.5 + index) + 1) / 2 * 0.5 + 0.5;
+                 const baseColor = materialMap.emissive_blue.emissiveColor;
+                 mesh.material.emissiveColor = new BABYLON.Color3(baseColor.r * glow, baseColor.g * glow, baseColor.b * glow);
             }
 
             // Add subtle movements
@@ -152,15 +157,45 @@ export const useBabylonScene = (canvasRef: React.RefObject<HTMLCanvasElement>, m
       glassMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 1.0);
       glassMaterial.alpha = 0.3;
       glassMaterial.specularColor = new BABYLON.Color3(1, 1, 1);
-      glassMaterial.indexOfRefraction = 1.5;
-      glassMaterial.reflectionFresnelParameters = new BABYLON.FresnelParameters();
-      glassMaterial.reflectionFresnelParameters.power = 2;
-      glassMaterial.reflectionFresnelParameters.bias = 0.1;
+      glassMaterial.emissiveColor = new BABYLON.Color3(0.4, 0.6, 1);
       
-      const materialMap = {
+      const goldMaterial = new BABYLON.StandardMaterial("goldMat", scene);
+      goldMaterial.diffuseColor = new BABYLON.Color3(1.0, 0.84, 0.0);
+      goldMaterial.specularColor = new BABYLON.Color3(0.8, 0.7, 0.2);
+      goldMaterial.specularPower = 128;
+      goldMaterial.emissiveColor = new BABYLON.Color3(0.2, 0.15, 0.0);
+
+      const emissiveBlueMaterial = new BABYLON.StandardMaterial("emissiveBlueMat", scene);
+      emissiveBlueMaterial.diffuseColor = new BABYLON.Color3(0.1, 0.2, 0.5);
+      emissiveBlueMaterial.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+      emissiveBlueMaterial.emissiveColor = new BABYLON.Color3(0.3, 0.7, 1.0);
+      
+      const metallicMaterial = new BABYLON.StandardMaterial("metallicMat", scene);
+      metallicMaterial.diffuseColor = new BABYLON.Color3(0.75, 0.75, 0.8);
+      metallicMaterial.specularColor = new BABYLON.Color3(1.0, 1.0, 1.0);
+      metallicMaterial.specularPower = 128;
+      metallicMaterial.emissiveColor = new BABYLON.Color3(0.1, 0.1, 0.15);
+
+      const woodMaterial = new BABYLON.StandardMaterial("woodMat", scene);
+      // Safety check to prevent crash if procedural texture library isn't loaded yet
+      if (BABYLON.WoodProceduralTexture) {
+          const woodTexture = new BABYLON.WoodProceduralTexture("woodTex", 1024, scene);
+          woodTexture.ampScale = 80.0;
+          woodMaterial.diffuseTexture = woodTexture;
+      } else {
+          console.warn("WoodProceduralTexture not available. Falling back to a brown color.");
+          woodMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.3, 0.1); // Fallback color
+      }
+      woodMaterial.emissiveColor = new BABYLON.Color3(0.1, 0.08, 0.05);
+      
+      const materialMap: {[key in MaterialType]: any} = {
           purple: purpleMaterial,
           teal: tealMaterial,
-          glass: glassMaterial
+          glass: glassMaterial,
+          gold: goldMaterial,
+          emissive_blue: emissiveBlueMaterial,
+          wood: woodMaterial,
+          metallic: metallicMaterial
       };
 
       if (modelData) {

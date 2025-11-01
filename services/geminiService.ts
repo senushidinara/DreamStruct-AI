@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { ModelData } from "../types";
 
@@ -45,7 +46,7 @@ export const modernizeBlueprint = async (imageBase64: string, mimeType: string):
     1. "description": A short, exciting textual summary of your modernized concept.
     2. "model": A JSON object representing the 3D model with a "shapes" array. Each shape object in the array should conform to the provided schema.
     
-    Generate between 5 to 10 shapes to create an interesting composition. Use a mix of materials, including 'glass' for windows or transparent floors. The entire structure should be centered around the origin (0,0,0) and fit within a 20x20x20 unit space.`;
+    Generate between 5 to 10 shapes to create an interesting composition. Use a mix of materials, including 'glass' for windows, 'gold' for accents, 'emissive_blue' for glowing parts, 'metallic' for structural elements, and 'wood' for organic elements. The entire structure should be centered around the origin (0,0,0) and fit within a 20x20x20 unit space.`;
 
     const imagePart = {
         inlineData: {
@@ -103,7 +104,7 @@ export const modernizeBlueprint = async (imageBase64: string, mimeType: string):
                                                 },
                                                 required: ['width', 'height', 'depth']
                                             },
-                                            material: { type: Type.STRING, enum: ['purple', 'teal', 'glass'] }
+                                            material: { type: Type.STRING, enum: ['purple', 'teal', 'glass', 'gold', 'emissive_blue', 'wood', 'metallic'] }
                                         },
                                         required: ['type', 'position', 'rotation', 'dimensions', 'material']
                                     }

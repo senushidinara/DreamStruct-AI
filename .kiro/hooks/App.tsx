@@ -1,10 +1,10 @@
 
 import React, { useState, useCallback, useRef } from 'react';
-import { Header } from './components/Header';
-import { ProjectCard } from './components/ProjectCard';
-import { InteractiveCanvas } from './components/InteractiveCanvas';
-import { getFeasibilitySuggestion, modernizeBlueprint } from './services/geminiService';
-import { Project, ModelData, Shape } from './types';
+import { Header } from '../../components/Header';
+import { ProjectCard } from '../../components/ProjectCard';
+import { InteractiveCanvas } from '../../components/InteractiveCanvas';
+import { getFeasibilitySuggestion, modernizeBlueprint } from '../../services/geminiService';
+import { Project, ModelData, Shape, MaterialType } from '../../types';
 
 const projects: Project[] = [
   {
@@ -103,6 +103,9 @@ const App: React.FC = () => {
   }, [blueprintImage, blueprintFile]);
 
   const handleAddFloor = useCallback(() => {
+    const availableMaterials: MaterialType[] = ['teal', 'purple', 'glass', 'gold', 'emissive_blue', 'wood', 'metallic'];
+    const material = availableMaterials[userShapes.length % availableMaterials.length];
+
     const newFloor: Shape = {
       type: 'box',
       position: { 
@@ -112,7 +115,7 @@ const App: React.FC = () => {
       },
       rotation: { x: 0, y: Math.random() * Math.PI, z: 0 },
       dimensions: { width: 6, height: 0.2, depth: 6 },
-      material: 'teal',
+      material: material,
     };
     setUserShapes(prevShapes => [...prevShapes, newFloor]);
   }, [userShapes]);
