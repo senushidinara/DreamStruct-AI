@@ -7,21 +7,34 @@ import { ModelData, Shape } from '../types';
 declare const BABYLON: any;
 
 const createDefaultScene = (scene: any, materialMap: {[key: string]: any}) => {
-    // Create impossible architecture
-    const mainPlatform = BABYLON.MeshBuilder.CreateBox("main", {width: 6, height: 0.5, depth: 6}, scene);
-    mainPlatform.material = materialMap.purple;
+    // Magical Floating Treehouse Hotel
+    const trunk = BABYLON.MeshBuilder.CreateCylinder("trunk", {height: 20, diameter: 2, tessellation: 24}, scene);
+    trunk.material = materialMap.purple;
+    trunk.position.y = 0;
 
-    const floatingCubes: any[] = [];
-    for (let i = 0; i < 5; i++) {
-        const size = Math.random() * 1.5 + 0.5;
-        const cube = BABYLON.MeshBuilder.CreateBox(`cube${i}`, {size: size}, scene);
-        cube.material = i % 2 === 0 ? materialMap.purple : materialMap.teal;
-        cube.position = new BABYLON.Vector3(
-          (Math.random() - 0.5) * 15,
-          Math.random() * 5 + 2,
-          (Math.random() - 0.5) * 15
+    const platforms: any[] = [];
+    const numPlatforms = 4;
+    for (let i = 0; i < numPlatforms; i++) {
+        const platform = BABYLON.MeshBuilder.CreateCylinder(`platform${i}`, {height: 0.3, diameter: 6 + i * 1.5}, scene);
+        platform.material = materialMap.teal;
+        platform.position.y = 2 + i * 4;
+        platform.rotation.y = Math.random() * Math.PI * 2;
+        platforms.push(platform);
+    }
+
+    const lanterns: any[] = [];
+    const numLanterns = 6;
+    for (let i = 0; i < numLanterns; i++) {
+        const lantern = BABYLON.MeshBuilder.CreateSphere(`lantern${i}`, {diameter: 0.8}, scene);
+        const lanternMat = new BABYLON.StandardMaterial(`lanternMat${i}`, scene);
+        lanternMat.emissiveColor = new BABYLON.Color3(0.8, 0.5, 1); // Glowing purple
+        lantern.material = lanternMat;
+        lantern.position = new BABYLON.Vector3(
+            (Math.random() - 0.5) * 12,
+            Math.random() * 15 + 2,
+            (Math.random() - 0.5) * 12
         );
-        floatingCubes.push(cube);
+        lanterns.push(lantern);
     }
     
     console.log("DreamStruct AI Interactive Demo loaded!");
@@ -29,12 +42,15 @@ const createDefaultScene = (scene: any, materialMap: {[key: string]: any}) => {
     let time = 0;
     scene.onBeforeRenderObservable.add(() => {
         time += 0.01;
-        floatingCubes.forEach((cube, i) => {
-            cube.rotation.y += 0.005 * (i % 2 === 0 ? 1 : -1);
-            cube.rotation.x += 0.002;
-            cube.position.y += Math.sin(time * (i * 0.5 + 1)) * 0.01;
+        platforms.forEach((platform, i) => {
+            platform.rotation.y += 0.003 * (i % 2 === 0 ? 1 : -1);
         });
-        mainPlatform.rotation.y += 0.001;
+        lanterns.forEach((lantern, i) => {
+            lantern.position.y += Math.sin(time * 2 + i) * 0.01;
+            // Pulsating glow
+            const glow = (Math.sin(time * 1.5 + i * 0.5) + 1) / 2 * 0.7 + 0.3; // Varies between 0.3 and 1.0
+            lantern.material.emissiveColor = new BABYLON.Color3(0.8 * glow, 0.5 * glow, 1 * glow);
+        });
     });
 };
 

@@ -8,7 +8,7 @@ interface ProjectCardProps {
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   return (
-    <div className="bg-gray-800/50 rounded-xl overflow-hidden shadow-lg border border-purple-500/20 transition-all duration-300 transform hover:scale-105 hover:shadow-purple-500/30">
+    <div className="bg-gray-800/50 rounded-xl overflow-hidden shadow-lg border border-purple-500/20 transition-all duration-300 transform hover:scale-105 hover:shadow-purple-500/30 hover:border-purple-400/80">
       <img className="w-full h-56 object-cover" src={project.gifUrl} alt={`${project.title} preview`} />
       <div className="p-6">
         <h3 className="text-2xl font-bold mb-2 text-purple-300">{project.title}</h3>

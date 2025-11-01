@@ -125,21 +125,21 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-4 md:py-8">
         
-        <section id="demo" className="mb-16 text-center">
+        <section id="demo" className="mb-12 md:mb-16 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
                 Interactive Demo
             </h2>
             <p className="max-w-3xl mx-auto mb-8 text-gray-400">
               Interact with the scene, add your own platforms, or upload a blueprint below to see it modernized by AI.
             </p>
-            <div className="w-full h-[60vh] max-h-[700px] rounded-xl overflow-hidden shadow-2xl shadow-purple-500/20 border border-purple-500/30">
+            <div className="w-full h-[60vh] max-h-[700px] rounded-xl overflow-hidden shadow-2xl shadow-purple-500/20 border border-purple-500/30 transition-all duration-300 hover:shadow-purple-500/40 hover:border-purple-500/50">
                 <InteractiveCanvas modelData={modelData} userShapes={userShapes} />
             </div>
         </section>
 
-        <section id="interactive-design" className="mb-16 text-center">
+        <section id="interactive-design" className="mb-12 md:mb-16 text-center">
             <h3 className="text-2xl font-bold mb-4 text-gray-300">Interactive Design</h3>
             <p className="max-w-2xl mx-auto mb-6 text-gray-400">
                 Add your own custom elements to the architectural concept in real-time.
@@ -162,7 +162,7 @@ const App: React.FC = () => {
             </div>
         </section>
 
-        <section id="blueprint-revival" className="mb-16 bg-gray-800/50 rounded-xl p-8 shadow-lg border border-blue-500/20">
+        <section id="blueprint-revival" className="mb-12 md:mb-16 bg-gray-800/50 rounded-xl p-8 shadow-lg border border-blue-500/20">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400">
                 Historical Blueprint Revival
             </h2>
@@ -210,7 +210,7 @@ const App: React.FC = () => {
             )}
         </section>
 
-        <section id="projects" className="mb-16">
+        <section id="projects" className="mb-12 md:mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-blue-500">
             Featured Concepts
           </h2>
