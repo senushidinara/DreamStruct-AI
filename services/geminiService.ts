@@ -75,7 +75,7 @@ export const modernizeBlueprint = async (imageBase64: string, mimeType: string):
                                     items: {
                                         type: Type.OBJECT,
                                         properties: {
-                                            type: { type: Type.STRING, enum: ['box', 'sphere', 'cylinder'] },
+                                            type: { type: Type.STRING, enum: ['box', 'sphere', 'cylinder', 'pyramid', 'torus'] },
                                             position: {
                                                 type: Type.OBJECT,
                                                 properties: {
@@ -101,6 +101,7 @@ export const modernizeBlueprint = async (imageBase64: string, mimeType: string):
                                                     height: { type: Type.NUMBER },
                                                     depth: { type: Type.NUMBER },
                                                     diameter: { type: Type.NUMBER },
+                                                    thickness: { type: Type.NUMBER },
                                                 },
                                                 required: ['width', 'height', 'depth']
                                             },

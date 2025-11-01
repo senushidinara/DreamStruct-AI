@@ -4,7 +4,7 @@ import { Header } from '../../components/Header';
 import { ProjectCard } from '../../components/ProjectCard';
 import { InteractiveCanvas } from '../../components/InteractiveCanvas';
 import { getFeasibilitySuggestion, modernizeBlueprint } from '../../services/geminiService';
-import { Project, ModelData, Shape, MaterialType } from '../../types';
+import { Project, ModelData, Shape, MaterialType, Position } from '../../types';
 
 const projects: Project[] = [
   {
@@ -113,12 +113,9 @@ const App: React.FC = () => {
     const newFloor: Shape = {
       id: `${Date.now()}-${Math.random()}`, // Unique ID for selection
       type: 'box',
-      position: { 
-        x: 0,
-        y: 10,
-        z: 0,
-      },
+      position: { x: 0, y: 10, z: 0 },
       rotation: { x: 0, y: 0, z: 0 },
+      scaling: { x: 1, y: 1, z: 1 }, // Add scaling
       dimensions: { 
         width: customDimensions.width, 
         height: customDimensions.height, 
@@ -137,8 +134,17 @@ const App: React.FC = () => {
   const handleShapeSelect = useCallback((shapeId: string | null) => {
     setSelectedShapeId(shapeId);
   }, []);
+  
+  // Callback for gizmo updates from Babylon scene
+  const handleShapeUpdate = useCallback((shapeId: string, newTransform: { position: Position, rotation: Position, scaling: Position }) => {
+    setUserShapes(prevShapes => prevShapes.map(shape => 
+        shape.id === shapeId
+        ? { ...shape, ...newTransform }
+        : shape
+    ));
+  }, []);
 
-  const handleUpdateShapePosition = (axis: 'x' | 'y' | 'z', value: string) => {
+  const handleUpdateShapeProperty = (property: 'position' | 'rotation' | 'scaling', axis: 'x' | 'y' | 'z', value: string) => {
     if (!selectedShapeId) return;
 
     const numericValue = parseFloat(value);
@@ -148,8 +154,8 @@ const App: React.FC = () => {
       if (shape.id === selectedShapeId) {
         return {
           ...shape,
-          position: {
-            ...shape.position,
+          [property]: {
+            ...shape[property],
             [axis]: numericValue
           }
         };
@@ -178,6 +184,7 @@ const App: React.FC = () => {
                   userShapes={userShapes} 
                   onShapeSelect={handleShapeSelect}
                   selectedShapeId={selectedShapeId}
+                  onShapeUpdate={handleShapeUpdate}
                 />
             </div>
         </section>
@@ -185,7 +192,7 @@ const App: React.FC = () => {
         <section id="interactive-design" className="mb-12 md:mb-16 bg-gray-800/50 rounded-xl p-8 shadow-lg border border-purple-500/20">
             <h3 className="text-2xl font-bold mb-4 text-gray-300 text-center">Interactive Design</h3>
             <p className="max-w-2xl mx-auto mb-6 text-gray-400 text-center">
-                Add your own custom elements to the architectural concept in real-time. Click an element you've added to edit it.
+                Add custom elements to the scene. Click an element you've added to select it, and use the gizmos to move, rotate, and scale it.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                 <div>
@@ -215,23 +222,44 @@ const App: React.FC = () => {
                     <h4 className="font-bold text-lg mb-3 text-center text-purple-300">Selected Shape Properties</h4>
                     <div className="bg-gray-900 p-4 rounded-lg h-full">
                        {selectedShape ? (
-                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center gap-2">
-                               <label htmlFor="posX" className="w-4 font-bold text-gray-400">X:</label>
-                               <input type="number" step="0.1" id="posX" value={selectedShape.position.x} onChange={e => handleUpdateShapePosition('x', e.target.value)} className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"/>
+                         <div className="flex flex-col gap-3">
+                            <div>
+                                <h5 className="font-semibold text-gray-400 text-sm mb-1">Position</h5>
+                                <div className="flex items-center gap-2">
+                                   <label htmlFor="posX" className="w-4 font-bold text-gray-400">X:</label>
+                                   <input type="number" step="0.1" id="posX" value={selectedShape.position.x.toFixed(2)} onChange={e => handleUpdateShapeProperty('position', 'x', e.target.value)} className="w-full p-1 bg-gray-800 border border-gray-700 rounded-md"/>
+                                   <label htmlFor="posY" className="w-4 font-bold text-gray-400">Y:</label>
+                                   <input type="number" step="0.1" id="posY" value={selectedShape.position.y.toFixed(2)} onChange={e => handleUpdateShapeProperty('position', 'y', e.target.value)} className="w-full p-1 bg-gray-800 border border-gray-700 rounded-md"/>
+                                   <label htmlFor="posZ" className="w-4 font-bold text-gray-400">Z:</label>
+                                   <input type="number" step="0.1" id="posZ" value={selectedShape.position.z.toFixed(2)} onChange={e => handleUpdateShapeProperty('position', 'z', e.target.value)} className="w-full p-1 bg-gray-800 border border-gray-700 rounded-md"/>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                               <label htmlFor="posY" className="w-4 font-bold text-gray-400">Y:</label>
-                               <input type="number" step="0.1" id="posY" value={selectedShape.position.y} onChange={e => handleUpdateShapePosition('y', e.target.value)} className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"/>
+                             <div>
+                                <h5 className="font-semibold text-gray-400 text-sm mb-1">Rotation (Deg)</h5>
+                                <div className="flex items-center gap-2">
+                                   <label htmlFor="rotX" className="w-4 font-bold text-gray-400">X:</label>
+                                   <input type="number" id="rotX" value={(selectedShape.rotation.x * 180 / Math.PI).toFixed(0)} onChange={e => handleUpdateShapeProperty('rotation', 'x', String(parseFloat(e.target.value) * Math.PI / 180))} className="w-full p-1 bg-gray-800 border border-gray-700 rounded-md"/>
+                                   <label htmlFor="rotY" className="w-4 font-bold text-gray-400">Y:</label>
+                                   <input type="number" id="rotY" value={(selectedShape.rotation.y * 180 / Math.PI).toFixed(0)} onChange={e => handleUpdateShapeProperty('rotation', 'y', String(parseFloat(e.target.value) * Math.PI / 180))} className="w-full p-1 bg-gray-800 border border-gray-700 rounded-md"/>
+                                   <label htmlFor="rotZ" className="w-4 font-bold text-gray-400">Z:</label>
+                                   <input type="number" id="rotZ" value={(selectedShape.rotation.z * 180 / Math.PI).toFixed(0)} onChange={e => handleUpdateShapeProperty('rotation', 'z', String(parseFloat(e.target.value) * Math.PI / 180))} className="w-full p-1 bg-gray-800 border border-gray-700 rounded-md"/>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                               <label htmlFor="posZ" className="w-4 font-bold text-gray-400">Z:</label>
-                               <input type="number" step="0.1" id="posZ" value={selectedShape.position.z} onChange={e => handleUpdateShapePosition('z', e.target.value)} className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"/>
+                             <div>
+                                <h5 className="font-semibold text-gray-400 text-sm mb-1">Scaling</h5>
+                                <div className="flex items-center gap-2">
+                                   <label htmlFor="scaleX" className="w-4 font-bold text-gray-400">X:</label>
+                                   <input type="number" step="0.1" id="scaleX" value={selectedShape.scaling.x.toFixed(2)} onChange={e => handleUpdateShapeProperty('scaling', 'x', e.target.value)} className="w-full p-1 bg-gray-800 border border-gray-700 rounded-md"/>
+                                   <label htmlFor="scaleY" className="w-4 font-bold text-gray-400">Y:</label>
+                                   <input type="number" step="0.1" id="scaleY" value={selectedShape.scaling.y.toFixed(2)} onChange={e => handleUpdateShapeProperty('scaling', 'y', e.target.value)} className="w-full p-1 bg-gray-800 border border-gray-700 rounded-md"/>
+                                   <label htmlFor="scaleZ" className="w-4 font-bold text-gray-400">Z:</label>
+                                   <input type="number" step="0.1" id="scaleZ" value={selectedShape.scaling.z.toFixed(2)} onChange={e => handleUpdateShapeProperty('scaling', 'z', e.target.value)} className="w-full p-1 bg-gray-800 border border-gray-700 rounded-md"/>
+                                </div>
                             </div>
                          </div>
                        ) : (
                          <div className="flex items-center justify-center h-full text-gray-500">
-                             <p>Select a floor you added to edit its position.</p>
+                             <p>Select a floor you added to edit it.</p>
                          </div>
                        )}
                     </div>

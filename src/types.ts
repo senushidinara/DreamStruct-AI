@@ -9,7 +9,7 @@ export interface Project {
 
 // Types for AI-generated 3D models
 export type ShapeType = 'box' | 'sphere' | 'cylinder' | 'pyramid' | 'torus';
-export type MaterialType = 'purple' | 'teal' | 'glass' | 'gold' | 'emissive_blue' | 'wood' | 'metallic';
+export type MaterialType = 'purple' | 'teal' | 'glass' | 'gold' | 'emissive_blue' | 'wood' | 'metallic' | 'rock';
 
 export interface Position {
   x: number;

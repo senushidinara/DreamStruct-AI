@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
 
     Your response MUST be a JSON object representing the 3D model with a "shapes" array. Each shape object in the array should conform to the provided schema.
 
-    Generate between 5 to 15 shapes to create an interesting composition. Use a mix of materials ('purple', 'teal', 'glass'). The entire structure should be centered around the origin (0,0,0) and fit within a 30x30x30 unit space.
+    Generate between 5 to 15 shapes to create an interesting composition. Use a mix of materials ('purple', 'teal', 'glass', 'gold', 'metallic'). The entire structure should be centered around the origin (0,0,0) and fit within a 30x30x30 unit space.
   `;
 
   try {
@@ -53,7 +53,7 @@ router.post('/', async (req, res) => {
                                     },
                                     required: ['width', 'height', 'depth']
                                 },
-                                material: { type: Type.STRING, enum: ['purple', 'teal', 'glass'] }
+                                material: { type: Type.STRING, enum: ['purple', 'teal', 'glass', 'gold', 'metallic'] }
                             },
                             required: ['type', 'position', 'rotation', 'dimensions', 'material']
                         }
