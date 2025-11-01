@@ -39,8 +39,10 @@ const App: React.FC = () => {
   const [blueprintError, setBlueprintError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // State for user-added shapes
+  // State for interactive design
   const [userShapes, setUserShapes] = useState<Shape[]>([]);
+  const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
+  const [customDimensions, setCustomDimensions] = useState({ width: 6, height: 0.2, depth: 6 });
 
   const handleGenerateSuggestion = useCallback(async () => {
     if (!prompt.trim()) {
@@ -87,7 +89,9 @@ const App: React.FC = () => {
     setBlueprintError(null);
     setModernizedDescription('');
     
-    // Reset to default scene before loading new one
+    // Reset user shapes and selection when loading a new base model
+    setUserShapes([]);
+    setSelectedShapeId(null);
     setModelData(null); 
 
     try {
@@ -105,25 +109,56 @@ const App: React.FC = () => {
   const handleAddFloor = useCallback(() => {
     const availableMaterials: MaterialType[] = ['teal', 'purple', 'glass', 'gold', 'emissive_blue', 'wood', 'metallic'];
     const material = availableMaterials[userShapes.length % availableMaterials.length];
-
+    
     const newFloor: Shape = {
+      id: `${Date.now()}-${Math.random()}`, // Unique ID for selection
       type: 'box',
       position: { 
-        x: (userShapes.length % 4 - 1.5) * 7,
-        y: 10 + Math.floor(userShapes.length / 4) * 5,
-        z: (userShapes.length % 3 - 1) * 5,
+        x: 0,
+        y: 10,
+        z: 0,
       },
-      rotation: { x: 0, y: Math.random() * Math.PI, z: 0 },
-      dimensions: { width: 6, height: 0.2, depth: 6 },
+      rotation: { x: 0, y: 0, z: 0 },
+      dimensions: { 
+        width: customDimensions.width, 
+        height: customDimensions.height, 
+        depth: customDimensions.depth 
+      },
       material: material,
     };
     setUserShapes(prevShapes => [...prevShapes, newFloor]);
-  }, [userShapes]);
+  }, [userShapes, customDimensions]);
   
   const handleClearUserShapes = useCallback(() => {
     setUserShapes([]);
+    setSelectedShapeId(null);
   }, []);
 
+  const handleShapeSelect = useCallback((shapeId: string | null) => {
+    setSelectedShapeId(shapeId);
+  }, []);
+
+  const handleUpdateShapePosition = (axis: 'x' | 'y' | 'z', value: string) => {
+    if (!selectedShapeId) return;
+
+    const numericValue = parseFloat(value);
+    if (isNaN(numericValue)) return;
+
+    setUserShapes(prevShapes => prevShapes.map(shape => {
+      if (shape.id === selectedShapeId) {
+        return {
+          ...shape,
+          position: {
+            ...shape.position,
+            [axis]: numericValue
+          }
+        };
+      }
+      return shape;
+    }));
+  };
+  
+  const selectedShape = userShapes.find(s => s.id === selectedShapeId);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans">
@@ -138,31 +173,80 @@ const App: React.FC = () => {
               Interact with the scene, add your own platforms, or upload a blueprint below to see it modernized by AI.
             </p>
             <div className="w-full h-[60vh] max-h-[700px] rounded-xl overflow-hidden shadow-2xl shadow-purple-500/20 border border-purple-500/30 transition-all duration-300 hover:shadow-purple-500/40 hover:border-purple-500/50">
-                <InteractiveCanvas modelData={modelData} userShapes={userShapes} />
+                <InteractiveCanvas 
+                  modelData={modelData} 
+                  userShapes={userShapes} 
+                  onShapeSelect={handleShapeSelect}
+                  selectedShapeId={selectedShapeId}
+                />
             </div>
         </section>
 
-        <section id="interactive-design" className="mb-12 md:mb-16 text-center">
-            <h3 className="text-2xl font-bold mb-4 text-gray-300">Interactive Design</h3>
-            <p className="max-w-2xl mx-auto mb-6 text-gray-400">
-                Add your own custom elements to the architectural concept in real-time.
+        <section id="interactive-design" className="mb-12 md:mb-16 bg-gray-800/50 rounded-xl p-8 shadow-lg border border-purple-500/20">
+            <h3 className="text-2xl font-bold mb-4 text-gray-300 text-center">Interactive Design</h3>
+            <p className="max-w-2xl mx-auto mb-6 text-gray-400 text-center">
+                Add your own custom elements to the architectural concept in real-time. Click an element you've added to edit it.
             </p>
-            <div className="flex justify-center gap-4">
-                 <button
-                    onClick={handleAddFloor}
-                    className="px-6 py-3 font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/30"
-                >
-                    Add Floating Floor
-                </button>
-                {userShapes.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div>
+                    <h4 className="font-bold text-lg mb-3 text-center text-purple-300">Add New Floor</h4>
+                    <div className="flex flex-col gap-4 bg-gray-900 p-4 rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="width" className="w-16 font-semibold text-gray-400">Width:</label>
+                            <input type="number" id="width" value={customDimensions.width} onChange={e => setCustomDimensions(d => ({...d, width: parseFloat(e.target.value)}))} className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"/>
+                        </div>
+                         <div className="flex items-center gap-2">
+                            <label htmlFor="height" className="w-16 font-semibold text-gray-400">Height:</label>
+                            <input type="number" id="height" value={customDimensions.height} onChange={e => setCustomDimensions(d => ({...d, height: parseFloat(e.target.value)}))} className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"/>
+                        </div>
+                         <div className="flex items-center gap-2">
+                            <label htmlFor="depth" className="w-16 font-semibold text-gray-400">Depth:</label>
+                            <input type="number" id="depth" value={customDimensions.depth} onChange={e => setCustomDimensions(d => ({...d, depth: parseFloat(e.target.value)}))} className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"/>
+                        </div>
+                        <button
+                            onClick={handleAddFloor}
+                            className="mt-2 px-6 py-3 font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/30"
+                        >
+                            Add Floating Floor
+                        </button>
+                    </div>
+                </div>
+                 <div>
+                    <h4 className="font-bold text-lg mb-3 text-center text-purple-300">Selected Shape Properties</h4>
+                    <div className="bg-gray-900 p-4 rounded-lg h-full">
+                       {selectedShape ? (
+                         <div className="flex flex-col gap-4">
+                            <div className="flex items-center gap-2">
+                               <label htmlFor="posX" className="w-4 font-bold text-gray-400">X:</label>
+                               <input type="number" step="0.1" id="posX" value={selectedShape.position.x} onChange={e => handleUpdateShapePosition('x', e.target.value)} className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"/>
+                            </div>
+                            <div className="flex items-center gap-2">
+                               <label htmlFor="posY" className="w-4 font-bold text-gray-400">Y:</label>
+                               <input type="number" step="0.1" id="posY" value={selectedShape.position.y} onChange={e => handleUpdateShapePosition('y', e.target.value)} className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"/>
+                            </div>
+                            <div className="flex items-center gap-2">
+                               <label htmlFor="posZ" className="w-4 font-bold text-gray-400">Z:</label>
+                               <input type="number" step="0.1" id="posZ" value={selectedShape.position.z} onChange={e => handleUpdateShapePosition('z', e.target.value)} className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"/>
+                            </div>
+                         </div>
+                       ) : (
+                         <div className="flex items-center justify-center h-full text-gray-500">
+                             <p>Select a floor you added to edit its position.</p>
+                         </div>
+                       )}
+                    </div>
+                </div>
+            </div>
+            {userShapes.length > 0 && (
+                <div className="text-center mt-6">
                     <button
                         onClick={handleClearUserShapes}
-                        className="px-6 py-3 font-bold text-white bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                        className="px-6 py-2 font-bold text-white bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
                     >
-                        Clear Customizations
+                        Clear All Customizations
                     </button>
-                )}
-            </div>
+                </div>
+            )}
         </section>
 
         <section id="blueprint-revival" className="mb-12 md:mb-16 bg-gray-800/50 rounded-xl p-8 shadow-lg border border-blue-500/20">

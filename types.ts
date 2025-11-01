@@ -31,6 +31,7 @@ export interface Dimensions {
 }
 
 export interface Shape {
+  id?: string; // Optional unique ID for user-added shapes
   type: ShapeType;
   position: Position;
   rotation: Rotation;
