@@ -4,24 +4,48 @@ import { useEffect } from 'react';
 const BABYLON = window.BABYLON;
 
 const createDefaultScene = (scene, materialMap) => {
-    const mainPlatform = BABYLON.MeshBuilder.CreateBox("main", {width: 6, height: 0.5, depth: 6}, scene);
-    mainPlatform.material = materialMap.purple;
-    mainPlatform.position.y = -2;
+    // A magical floating island with a wizard's observatory
+    const island = BABYLON.MeshBuilder.CreateSphere("island", {diameter: 15, segments: 24, slice: 0.5}, scene);
+    island.material = materialMap.purple;
+    island.position.y = -5;
+    island.rotation.x = Math.PI / 2;
 
-    const floatingSphere = BABYLON.MeshBuilder.CreateSphere('sphere', {diameter: 2}, scene);
-    floatingSphere.material = materialMap.teal;
-    floatingSphere.position = new BABYLON.Vector3(0, 3, 0);
+    const tower = BABYLON.MeshBuilder.CreateCylinder("tower", {height: 12, diameter: 4}, scene);
+    tower.material = materialMap.purple;
+    tower.position.y = 2;
 
+    const roof = BABYLON.MeshBuilder.CreateSphere("roof", {diameter: 5, slice: 0.5}, scene);
+    roof.material = materialMap.teal;
+    roof.position.y = 8;
+
+    const crystals = [];
+    for(let i = 0; i < 5; i++) {
+        const crystal = BABYLON.MeshBuilder.CreateIcoSphere(`crystal${i}`, {radius: 1, subdivisions: 2}, scene);
+        crystal.material = materialMap.glass;
+        crystal.position = new BABYLON.Vector3(
+            (Math.random() - 0.5) * 12,
+            -6 + Math.random() * 2,
+            (Math.random() - 0.5) * 12
+        );
+        crystals.push(crystal);
+    }
+    
     let time = 0;
     scene.onBeforeRenderObservable.add(() => {
         time += 0.01;
-        floatingSphere.position.y = 3 + Math.sin(time) * 0.5;
-        floatingSphere.rotation.y += 0.01;
-        mainPlatform.rotation.y += 0.001;
+        island.rotation.z += 0.001;
+        roof.rotation.y += 0.005;
+        crystals.forEach((crystal, i) => {
+            crystal.position.y += Math.sin(time * 1.5 + i) * 0.01;
+            const glow = (Math.sin(time * 2 + i * 0.5) + 1) / 2 * 0.6 + 0.4;
+            crystal.material.emissiveColor = new BABYLON.Color3(0.5 * glow, 0.8 * glow, 1 * glow);
+        });
     });
 };
 
 const createModelScene = (scene, modelData, materialMap) => {
+    const generatedMeshes = [];
+
     modelData.shapes.forEach((shape, index) => {
         let mesh;
         switch (shape.type) {
@@ -51,8 +75,34 @@ const createModelScene = (scene, modelData, materialMap) => {
             mesh.position = new BABYLON.Vector3(shape.position.x, shape.position.y, shape.position.z);
             mesh.rotation = new BABYLON.Vector3(shape.rotation.x, shape.rotation.y, shape.rotation.z);
             mesh.material = materialMap[shape.material] || materialMap.purple;
+            generatedMeshes.push({ mesh, originalY: shape.position.y, shapeType: shape.type });
         }
     });
+    
+    // Add animations for the generated model
+    let time = 0;
+    scene.onBeforeRenderObservable.add(() => {
+        time += 0.01;
+        generatedMeshes.forEach(({ mesh, originalY, shapeType }, index) => {
+            if (mesh.material === materialMap.glass) {
+                // Pulsating glow effect
+                // Get the base color from the material definition, in this case (0.4, 0.6, 1)
+                const baseColor = materialMap.glass.emissiveColor;
+                // Create a smooth oscillation between a dim (e.g., 0.6) and bright (e.g., 1.0) state.
+                const glow = (Math.sin(time * 1.5 + index * 0.5) + 1) / 2 * 0.4 + 0.6; // Oscillates between 0.6 and 1.0
+                mesh.material.emissiveColor = new BABYLON.Color3(baseColor.r * glow, baseColor.g * glow, baseColor.b * glow);
+            }
+
+            if (shapeType === 'sphere') {
+                 // Gentle bobbing motion
+                mesh.position.y = originalY + Math.sin(time * 0.8 + index) * 0.2;
+            } else {
+                // Slow rotation
+                mesh.rotation.y += 0.001 * (index % 2 === 0 ? 1 : -1);
+            }
+        });
+    });
+
     console.log("DreamStruct AI Model loaded!");
 };
 
@@ -70,26 +120,33 @@ export const useBabylonScene = (canvasRef, modelData) => {
       camera.attachControl(canvasRef.current, true);
       camera.lowerRadiusLimit = 10;
       camera.upperRadiusLimit = 150;
+      camera.wheelPrecision = 50;
 
       const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-      light.intensity = 0.8;
+      light.intensity = 0.5;
       
       const light2 = new BABYLON.PointLight("pointlight", new BABYLON.Vector3(-15, 15, -15), scene);
-      light2.intensity = 0.7;
+      light2.intensity = 0.9;
       light2.diffuse = new BABYLON.Color3(0.8, 0.5, 1); // Purple tint
 
       // Materials
       const purpleMaterial = new BABYLON.StandardMaterial("purpleMat", scene);
       purpleMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.3, 0.8);
+      purpleMaterial.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
       purpleMaterial.emissiveColor = new BABYLON.Color3(0.2, 0.1, 0.4);
 
       const tealMaterial = new BABYLON.StandardMaterial("tealMat", scene);
       tealMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.8, 0.7);
+      tealMaterial.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
       tealMaterial.emissiveColor = new BABYLON.Color3(0.1, 0.4, 0.35);
 
       const glassMaterial = new BABYLON.StandardMaterial("glassMat", scene);
-      glassMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 1.0);
-      glassMaterial.alpha = 0.3;
+      glassMaterial.diffuseColor = new BABYLON.Color3(0.7, 0.8, 1.0);
+      glassMaterial.alpha = 0.2;
+      glassMaterial.specularPower = 128;
+      glassMaterial.emissiveColor = new BABYLON.Color3(0.4, 0.6, 1);
+      glassMaterial.reflectionFresnelParameters = new BABYLON.FresnelParameters();
+      glassMaterial.reflectionFresnelParameters.power = 2;
       
       const materialMap = { purple: purpleMaterial, teal: tealMaterial, glass: glassMaterial };
 
